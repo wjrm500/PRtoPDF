@@ -16,3 +16,6 @@ dev = [
     "mypy>=1.18.2",
     "pre-commit>=4.3.0",
 ]
+
+[project.scripts]
+prtopdf = "prtopdf.main:main"

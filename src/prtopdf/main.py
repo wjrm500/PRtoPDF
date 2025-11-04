@@ -1,7 +1,7 @@
 """
 GitHub PR to PDF Converter
 Converts a GitHub pull request to an anonymised PDF document.
-Usage: python main.py <PR_URL>
+Usage: uv run prtopdf <PR_URL>
 """
 
 import json
@@ -259,8 +259,8 @@ def create_pdf(
 
 def main() -> None:
     if len(sys.argv) != 2:
-        print("Usage: python main.py <PR_URL>")
-        print("Example: python main.py https://github.com/owner/repo/pull/123")
+        print("Usage: uv run prtopdf <PR_URL>")
+        print("Example: uv run prtopdf https://github.com/owner/repo/pull/123")
         sys.exit(1)
 
     pr_url = sys.argv[1]
