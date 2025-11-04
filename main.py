@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
 GitHub PR to PDF Converter
-Converts a GitHub pull request to an anonymized PDF document.
+Converts a GitHub pull request to an anonymised PDF document.
 Usage: python main.py <PR_URL>
 """
 
@@ -10,6 +9,7 @@ import sys
 import urllib.error
 import urllib.request
 from datetime import datetime
+from typing import Any, TypedDict
 
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -18,7 +18,28 @@ from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 
-def parse_pr_url(url):
+class PRData(TypedDict, total=False):
+    title: str
+    created_at: str
+    state: str
+    merged_at: str
+    body: str
+    base: dict[str, Any]
+
+
+class CommitData(TypedDict):
+    sha: str
+    commit: dict[str, Any]
+
+
+class FileData(TypedDict, total=False):
+    filename: str
+    status: str
+    additions: int
+    deletions: int
+
+
+def parse_pr_url(url: str) -> tuple[str, str, str]:
     """Extract owner, repo, and PR number from GitHub URL."""
     parts = url.rstrip("/").split("/")
 
@@ -35,7 +56,7 @@ def parse_pr_url(url):
         raise ValueError("Could not parse PR URL")
 
 
-def fetch_json(url):
+def fetch_json(url: str) -> Any:
     """Fetch JSON data from a URL."""
     try:
         with urllib.request.urlopen(url) as response:
@@ -48,7 +69,9 @@ def fetch_json(url):
         sys.exit(1)
 
 
-def fetch_pr_data(owner, repo, pr_number):
+def fetch_pr_data(
+    owner: str, repo: str, pr_number: str
+) -> tuple[PRData, list[CommitData], list[FileData]]:
     """Fetch PR details, commits, and files from GitHub API."""
     base_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
 
@@ -64,7 +87,7 @@ def fetch_pr_data(owner, repo, pr_number):
     return pr_data, commits_data, files_data
 
 
-def get_change_status(status):
+def get_change_status(status: str) -> str:
     """Convert GitHub file status to readable format."""
     status_map = {
         "added": "New",
@@ -75,7 +98,12 @@ def get_change_status(status):
     return status_map.get(status, status.capitalize())
 
 
-def create_pdf(pr_data, commits_data, files_data, output_filename):
+def create_pdf(
+    pr_data: PRData,
+    commits_data: list[CommitData],
+    files_data: list[FileData],
+    output_filename: str,
+) -> None:
     """Generate PDF document from PR data."""
     doc = SimpleDocTemplate(
         output_filename,
@@ -132,7 +160,7 @@ def create_pdf(pr_data, commits_data, files_data, output_filename):
     story.append(title)
     story.append(Spacer(1, 0.2 * inch))
 
-    # PR metadata (anonymized)
+    # PR metadata (anonymised)
     created_at = datetime.strptime(pr_data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
     metadata = f"<b>Created:</b> {created_at.strftime('%Y-%m-%d')}<br/>"
     metadata += f"<b>State:</b> {pr_data['state'].capitalize()}<br/>"
@@ -229,7 +257,7 @@ def create_pdf(pr_data, commits_data, files_data, output_filename):
     print("PDF generated successfully!")
 
 
-def main():
+def main() -> None:
     if len(sys.argv) != 2:
         print("Usage: python main.py <PR_URL>")
         print("Example: python main.py https://github.com/owner/repo/pull/123")
