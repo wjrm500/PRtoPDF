@@ -10,6 +10,7 @@ from typing import Any, TypedDict
 
 
 class PRData(TypedDict, total=False):
+    number: int
     title: str
     created_at: str
     state: str
