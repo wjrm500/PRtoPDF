@@ -17,7 +17,7 @@ def create_title_section(
     """Create title section flowables."""
     return [
         Paragraph(f"Pull Request: {pr_data['title']}", styles["title"]),
-        Spacer(1, 0.2 * inch),
+        Spacer(1, 0.1 * inch),
     ]
 
 
@@ -35,7 +35,7 @@ def create_metadata_section(
 
     return [
         Paragraph(metadata, styles["body"]),
-        Spacer(1, 0.3 * inch),
+        Spacer(1, 0.1 * inch),
     ]
 
 
@@ -52,7 +52,7 @@ def create_description_section(
     return [
         Paragraph("1. Pull Request Description", styles["heading"]),
         Paragraph(formatted_description, styles["body"]),
-        Spacer(1, 0.3 * inch),
+        Spacer(1, 0.1 * inch),
     ]
 
 
@@ -71,7 +71,7 @@ def create_commits_section(
     for commit in commits_data:
         flowables.extend(_create_commit_flowables(commit, owner, repo, api, styles))
 
-    flowables.append(Spacer(1, 0.2 * inch))
+    flowables.append(Spacer(1, 0.1 * inch))
     return flowables
 
 
@@ -108,7 +108,6 @@ def _create_commit_flowables(
     for file in commit_details.get("files", []):
         flowables.append(Paragraph(format_file_info(file), styles["code"]))
 
-    flowables.append(Spacer(1, 0.15 * inch))
     return flowables
 
 
@@ -132,7 +131,7 @@ def create_summary_section(
     flowables.extend(
         [
             Paragraph(summary, styles["body"]),
-            Spacer(1, 0.2 * inch),
+            Spacer(1, 0.1 * inch),
             Paragraph("<b>Files changed:</b>", styles["body"]),
         ]
     )
