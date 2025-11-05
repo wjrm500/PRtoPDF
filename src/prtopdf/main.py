@@ -4,12 +4,8 @@ Converts a GitHub pull request to an anonymised PDF document.
 Usage: uv run prtopdf <PR_URL>
 """
 
-import json
 import sys
-import urllib.error
-import urllib.request
 from datetime import datetime
-from typing import Any, TypedDict
 
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -17,26 +13,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
-
-class PRData(TypedDict, total=False):
-    title: str
-    created_at: str
-    state: str
-    merged_at: str
-    body: str
-    base: dict[str, Any]
-
-
-class CommitData(TypedDict):
-    sha: str
-    commit: dict[str, Any]
-
-
-class FileData(TypedDict, total=False):
-    filename: str
-    status: str
-    additions: int
-    deletions: int
+from prtopdf.github_api import CommitData, FileData, GitHubAPI, PRData
 
 
 def parse_pr_url(url: str) -> tuple[str, str, str]:
@@ -56,37 +33,6 @@ def parse_pr_url(url: str) -> tuple[str, str, str]:
         raise ValueError("Could not parse PR URL")
 
 
-def fetch_json(url: str) -> Any:
-    """Fetch JSON data from a URL."""
-    try:
-        with urllib.request.urlopen(url) as response:
-            return json.loads(response.read().decode())
-    except urllib.error.HTTPError as e:
-        print(f"HTTP Error {e.code}: {e.reason}")
-        sys.exit(1)
-    except urllib.error.URLError as e:
-        print(f"URL Error: {e.reason}")
-        sys.exit(1)
-
-
-def fetch_pr_data(
-    owner: str, repo: str, pr_number: str
-) -> tuple[PRData, list[CommitData], list[FileData]]:
-    """Fetch PR details, commits, and files from GitHub API."""
-    base_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
-
-    print("Fetching PR details...")
-    pr_data = fetch_json(base_url)
-
-    print("Fetching commits...")
-    commits_data = fetch_json(f"{base_url}/commits")
-
-    print("Fetching file changes...")
-    files_data = fetch_json(f"{base_url}/files")
-
-    return pr_data, commits_data, files_data
-
-
 def get_change_status(status: str) -> str:
     """Convert GitHub file status to readable format."""
     status_map = {
@@ -103,6 +49,7 @@ def create_pdf(
     commits_data: list[CommitData],
     files_data: list[FileData],
     output_filename: str,
+    api: GitHubAPI,
 ) -> None:
     """Generate PDF document from PR data."""
     doc = SimpleDocTemplate(
@@ -186,6 +133,10 @@ def create_pdf(
     # Section 2: Commits
     story.append(Paragraph("2. Commits", heading_style))
 
+    # Extract owner and repo from pr_data
+    owner = pr_data["base"]["repo"]["owner"]["login"]
+    repo = pr_data["base"]["repo"]["name"]
+
     for commit in commits_data:
         commit_msg = commit["commit"]["message"]
         lines = commit_msg.split("\n", 1)
@@ -208,10 +159,9 @@ def create_pdf(
         # Files changed in this commit
         story.append(Paragraph("<b>Files changed in this commit:</b>", body_style))
 
-        # Get files for this commit
+        # Get files for this commit using the API
         commit_sha = commit["sha"]
-        commit_files_url = f"https://api.github.com/repos/{pr_data['base']['repo']['owner']['login']}/{pr_data['base']['repo']['name']}/commits/{commit_sha}"  # noqa: E501
-        commit_details = fetch_json(commit_files_url)
+        commit_details = api.get_commit(owner, repo, commit_sha)
 
         for file in commit_details.get("files", []):
             filename = file["filename"]
@@ -270,12 +220,22 @@ def main() -> None:
         owner, repo, pr_number = parse_pr_url(pr_url)
         print(f"Processing PR #{pr_number} from {owner}/{repo}")
 
+        # Initialize GitHub API client
+        api = GitHubAPI()
+
         # Fetch data
-        pr_data, commits_data, files_data = fetch_pr_data(owner, repo, pr_number)
+        print("Fetching PR details...")
+        pr_data = api.get_pull_request(owner, repo, pr_number)
+
+        print("Fetching commits...")
+        commits_data = api.get_pull_request_commits(owner, repo, pr_number)
+
+        print("Fetching file changes...")
+        files_data = api.get_pull_request_files(owner, repo, pr_number)
 
         # Generate PDF
         output_filename = f"PR-{pr_number}-evidence.pdf"
-        create_pdf(pr_data, commits_data, files_data, output_filename)
+        create_pdf(pr_data, commits_data, files_data, output_filename, api)
 
     except ValueError as e:
         print(f"Error: {e}")
