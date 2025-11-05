@@ -15,7 +15,12 @@ def create_title_section(
     pr_data: PRData, styles: dict[str, ParagraphStyle]
 ) -> list[Any]:
     """Create title section flowables."""
+    owner = pr_data["base"]["repo"]["owner"]["login"]
+    repo = pr_data["base"]["repo"]["name"]
+
     return [
+        Paragraph(f"{owner}/{repo}", styles["repo"]),
+        Spacer(1, 0.1 * inch),
         Paragraph(f"Pull Request: {pr_data['title']}", styles["title"]),
         Spacer(1, 0.1 * inch),
     ]
