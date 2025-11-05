@@ -19,3 +19,6 @@ dev = [
 
 [project.scripts]
 prtopdf = "prtopdf.main:main"
+
+[tool.isort]
+profile = "black"

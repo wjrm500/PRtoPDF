@@ -6,8 +6,8 @@ Usage: uv run prtopdf <PR_URL>
 
 import sys
 
+from prtopdf.generator import create_pdf
 from prtopdf.github_api import GitHubAPI
-from prtopdf.pdf_generator import create_pdf
 
 
 def parse_pr_url(url: str) -> tuple[str, str, str]:
