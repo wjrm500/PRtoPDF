@@ -23,6 +23,7 @@ def create_pdf(
     files_data: list[FileData],
     output_filename: str,
     api: GitHubAPI,
+    anonymise: bool = False,
 ) -> None:
     """Generate PDF document from PR data."""
     doc = SimpleDocTemplate(
@@ -39,7 +40,7 @@ def create_pdf(
 
     # Build document by composing section flowables
     story.extend(create_title_section(pr_data, styles))
-    story.extend(create_metadata_section(pr_data, styles))
+    story.extend(create_metadata_section(pr_data, styles, anonymise))
     story.extend(create_description_section(pr_data, styles))
     story.extend(create_commits_section(pr_data, commits_data, api, styles))
     story.extend(create_summary_section(files_data, styles))

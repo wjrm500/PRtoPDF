@@ -28,12 +28,16 @@ def parse_pr_url(url: str) -> tuple[str, str, str]:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
-        print("Usage: uv run prtopdf <PR_URL>")
+    if len(sys.argv) < 2:
+        print("Usage: uv run prtopdf <PR_URL> [--anonymise]")
         print("Example: uv run prtopdf https://github.com/owner/repo/pull/123")
+        print(
+            "         uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise"
+        )
         sys.exit(1)
 
     pr_url = sys.argv[1]
+    anonymise = "--anonymise" in sys.argv
 
     try:
         # Parse URL
@@ -55,7 +59,7 @@ def main() -> None:
 
         # Generate PDF
         output_filename = f"PR-{pr_number}-evidence.pdf"
-        create_pdf(pr_data, commits_data, files_data, output_filename, api)
+        create_pdf(pr_data, commits_data, files_data, output_filename, api, anonymise)
 
     except ValueError as e:
         print(f"Error: {e}")

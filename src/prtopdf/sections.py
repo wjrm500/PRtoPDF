@@ -28,11 +28,17 @@ def create_title_section(
 
 
 def create_metadata_section(
-    pr_data: PRData, styles: dict[str, ParagraphStyle]
+    pr_data: PRData, styles: dict[str, ParagraphStyle], anonymise: bool = False
 ) -> list[Any]:
     """Create metadata section flowables."""
+    metadata = ""
+
+    if not anonymise:
+        author = pr_data["user"]["login"]
+        metadata += f"<b>Author:</b> {author}<br/>"
+
     created_at = datetime.strptime(pr_data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-    metadata = f"<b>Created:</b> {created_at.strftime('%Y-%m-%d')}<br/>"
+    metadata += f"<b>Created:</b> {created_at.strftime('%Y-%m-%d')}<br/>"
     metadata += f"<b>State:</b> {pr_data['state'].capitalize()}<br/>"
 
     if pr_data.get("merged_at"):

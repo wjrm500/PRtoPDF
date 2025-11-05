@@ -17,6 +17,7 @@ class PRData(TypedDict, total=False):
     merged_at: str
     body: str
     base: dict[str, Any]
+    user: dict[str, Any]
 
 
 class CommitData(TypedDict):
