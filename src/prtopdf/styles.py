@@ -46,6 +46,16 @@ def create_styles() -> dict[str, ParagraphStyle]:
             spaceBefore=10,
             textColor="#000000",
         ),
+        "commit_meta": ParagraphStyle(
+            "CustomCommitMeta",
+            parent=base_styles["Normal"],
+            fontSize=9,
+            fontName="Helvetica",
+            alignment=TA_LEFT,
+            spaceAfter=6,
+            leading=12,
+            textColor="#777777",
+        ),
         "body": ParagraphStyle(
             "CustomBody",
             parent=base_styles["Normal"],

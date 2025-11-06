@@ -22,11 +22,14 @@ class PRData(TypedDict, total=False):
     head: dict[str, Any]
     base: dict[str, Any]
     user: dict[str, Any]
+    draft: bool
 
 
 class CommitData(TypedDict):
     sha: str
     commit: dict[str, Any]
+    author: dict[str, Any]
+    committer: dict[str, Any]
 
 
 class FileData(TypedDict, total=False):

@@ -102,6 +102,7 @@ def create_commits_section(
     commits_data: list[CommitData],
     api: GitHubAPI,
     styles: dict[str, ParagraphStyle],
+    anonymise: bool = False,
 ) -> list[Any]:
     """Create commits section flowables."""
     flowables: list[Any] = [Paragraph("2. Commits", styles["heading"])]
@@ -110,7 +111,9 @@ def create_commits_section(
     repo = pr_data["base"]["repo"]["name"]
 
     for commit in commits_data:
-        flowables.extend(_create_commit_flowables(commit, owner, repo, api, styles))
+        flowables.extend(
+            _create_commit_flowables(commit, owner, repo, api, styles, anonymise)
+        )
 
     flowables.append(Spacer(1, 0.1 * inch))
     return flowables
@@ -122,6 +125,7 @@ def _create_commit_flowables(
     repo: str,
     api: GitHubAPI,
     styles: dict[str, ParagraphStyle],
+    anonymise: bool = False,
 ) -> list[Any]:
     """Create flowables for a single commit."""
     flowables: list[Any] = []
@@ -132,8 +136,51 @@ def _create_commit_flowables(
     commit_title = lines[0]
     commit_body = lines[1].strip() if len(lines) > 1 else ""
 
-    # Add commit title
-    flowables.append(Paragraph(f"<b>Commit:</b> {commit_title}", styles["subheading"]))
+    # Extract commit metadata
+    commit_sha = commit["sha"]
+    short_sha = commit_sha[:7]
+
+    commit_meta = ""
+
+    if not anonymise:
+        # Get author (who wrote the code)
+        author_obj = commit.get("author") or {}
+        author_username = author_obj.get("login") or commit["commit"]["author"].get(
+            "name", "unknown"
+        )
+
+        commit_meta += f"<b>Author:</b> {author_username} | "
+
+        # Get committer (who applied the commit) if different
+        committer_obj = commit.get("committer") or {}
+        committer_username = committer_obj.get("login") or commit["commit"][
+            "committer"
+        ].get("name")
+
+        # Check if committer is different from author
+        author_id = author_obj.get("id")
+        committer_id = committer_obj.get("id")
+        show_committer = (
+            committer_username
+            and author_id != committer_id
+            and author_username != committer_username
+        )
+
+        if show_committer:
+            commit_meta += f"<b>Committer:</b> {committer_username} | "
+
+    commit_date = commit["commit"]["author"]["date"]
+    formatted_date = datetime.strptime(commit_date, "%Y-%m-%dT%H:%M:%SZ").strftime(
+        "%Y-%m-%d %H:%M:%S UTC"
+    )
+
+    # Add commit header with metadata
+    commit_header = f"<b>Commit:</b> {commit_title}"
+    flowables.append(Paragraph(commit_header, styles["subheading"]))
+
+    # Build metadata line
+    commit_meta += f"<b>Date:</b> {formatted_date} | <b>SHA:</b> {short_sha}"
+    flowables.append(Paragraph(commit_meta, styles["commit_meta"]))
 
     # Add commit body if present
     if commit_body:
@@ -143,7 +190,6 @@ def _create_commit_flowables(
     # Add files changed
     flowables.append(Paragraph("<b>Files changed in this commit:</b>", styles["body"]))
 
-    commit_sha = commit["sha"]
     commit_details = api.get_commit(owner, repo, commit_sha)
 
     for file in commit_details.get("files", []):

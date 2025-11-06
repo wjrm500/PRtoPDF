@@ -42,7 +42,7 @@ def create_pdf(
     story.extend(create_title_section(pr_data, styles))
     story.extend(create_metadata_section(pr_data, styles, anonymise))
     story.extend(create_description_section(pr_data, styles))
-    story.extend(create_commits_section(pr_data, commits_data, api, styles))
+    story.extend(create_commits_section(pr_data, commits_data, api, styles, anonymise))
     story.extend(create_summary_section(files_data, styles))
 
     print(f"Generating PDF: {output_filename}")
