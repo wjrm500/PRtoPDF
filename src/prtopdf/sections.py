@@ -39,7 +39,9 @@ def create_metadata_section(
 
     created_at = datetime.strptime(pr_data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
     metadata += f"<b>Created:</b> {created_at.strftime('%Y-%m-%d')}<br/>"
-    metadata += f"<b>State:</b> {pr_data['state'].capitalize()}<br/>"
+
+    state = "Merged" if pr_data.get("merged_at") else pr_data["state"].capitalize()
+    metadata += f"<b>State:</b> {state}<br/>"
 
     if pr_data.get("merged_at"):
         merged_at = datetime.strptime(pr_data["merged_at"], "%Y-%m-%dT%H:%M:%SZ")
