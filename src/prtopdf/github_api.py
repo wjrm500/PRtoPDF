@@ -2,11 +2,10 @@
 Lightweight GitHub API client.
 """
 
-import json
 import sys
-import urllib.error
-import urllib.request
 from typing import Any, TypedDict
+
+import requests
 
 
 class PRData(TypedDict, total=False):
@@ -46,6 +45,10 @@ class GitHubAPI:
             token: Optional GitHub personal access token for authenticated requests.
         """
         self.token = token
+        self.session = requests.Session()
+        if token:
+            self.session.headers.update({"Authorization": f"token {token}"})
+        self.session.headers.update({"Accept": "application/vnd.github.v3+json"})
 
     def _request(self, endpoint: str) -> Any:
         """
@@ -58,28 +61,23 @@ class GitHubAPI:
             JSON response as a Python object.
 
         Raises:
-            SystemExit: On HTTP or URL errors.
+            SystemExit: On HTTP errors.
         """
         url = f"{self.BASE_URL}{endpoint}"
-        request = urllib.request.Request(url)
-
-        if self.token:
-            request.add_header("Authorization", f"token {self.token}")
-
-        request.add_header("Accept", "application/vnd.github.v3+json")
 
         try:
-            with urllib.request.urlopen(request) as response:
-                return json.loads(response.read().decode())
-        except urllib.error.HTTPError as e:
-            print(f"HTTP Error {e.code}: {e.reason}")
-            if e.code == 401:
+            response = self.session.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.HTTPError as e:
+            print(f"HTTP Error {e.response.status_code}: {e.response.reason}")
+            if e.response.status_code == 401:
                 print("Authentication failed. Check your token.")
-            elif e.code == 404:
+            elif e.response.status_code == 404:
                 print("Resource not found. Check the URL.")
             sys.exit(1)
-        except urllib.error.URLError as e:
-            print(f"URL Error: {e.reason}")
+        except requests.RequestException as e:
+            print(f"Request Error: {e}")
             sys.exit(1)
 
     def get_pull_request(self, owner: str, repo: str, pr_number: str) -> PRData:
