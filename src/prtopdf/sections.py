@@ -35,10 +35,12 @@ def create_metadata_section(
 
     if not anonymise:
         author = pr_data["user"]["login"]
-        metadata += f"<b>Author:</b> {author}<br/>"
+        metadata += f"<b>Created by:</b> {author}<br/>"
 
     created_at = datetime.strptime(pr_data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-    metadata += f"<b>Created:</b> {created_at.strftime('%Y-%m-%d')}<br/>"
+    metadata += (
+        f"<b>Created at:</b> {created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}<br/>"
+    )
 
     head_branch = pr_data["head"]["ref"]
     base_branch = pr_data["base"]["ref"]
