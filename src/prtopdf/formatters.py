@@ -32,4 +32,4 @@ def format_file_info(file: FileData | dict[str, Any]) -> str:
     status = get_change_status(file["status"])
     additions = file.get("additions", 0)
     deletions = file.get("deletions", 0)
-    return f"• {filename} ({status}, +{additions}/-{deletions})"
+    return f"• {filename} ({status}, <font color='green'>+{additions}</font>/<font color='red'>-{deletions}</font>)"  # noqa: E501
