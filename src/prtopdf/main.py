@@ -29,23 +29,27 @@ def parse_pr_url(url: str) -> tuple[str, str, str]:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: uv run prtopdf <PR_URL> [--anonymise]")
+        print("Usage: uv run prtopdf <PR_URL> [--anonymise] [--no-cache]")
         print("Example: uv run prtopdf https://github.com/owner/repo/pull/123")
         print(
             "         uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise"
+        )
+        print(
+            "         uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache"
         )
         sys.exit(1)
 
     pr_url = sys.argv[1]
     anonymise = "--anonymise" in sys.argv
+    use_cache = "--no-cache" not in sys.argv
 
     try:
         # Parse URL
         owner, repo, pr_number = parse_pr_url(pr_url)
         print(f"Processing PR #{pr_number} from {owner}/{repo}")
 
-        # Initialize GitHub API client
-        api = GitHubAPI()
+        # Initialise GitHub API client
+        api = GitHubAPI(use_cache=use_cache)
 
         # Fetch data
         print("Fetching PR details...")

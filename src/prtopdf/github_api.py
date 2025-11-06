@@ -6,6 +6,7 @@ import sys
 from typing import Any, TypedDict
 
 import requests
+import requests_cache
 
 
 class PRData(TypedDict, total=False):
@@ -37,15 +38,23 @@ class GitHubAPI:
 
     BASE_URL = "https://api.github.com"
 
-    def __init__(self, token: str | None = None):
+    def __init__(self, token: str | None = None, use_cache: bool = True):
         """
         Initialise GitHub API client.
 
         Args:
             token: Optional GitHub personal access token for authenticated requests.
+            use_cache: Whether to use file-based caching (default: True)
         """
         self.token = token
-        self.session = requests.Session()
+
+        if use_cache:
+            self.session = requests_cache.CachedSession(
+                ".cache/github_api", expire_after=3600
+            )
+        else:
+            self.session = requests.Session()
+
         if token:
             self.session.headers.update({"Authorization": f"token {token}"})
         self.session.headers.update({"Accept": "application/vnd.github.v3+json"})
@@ -67,6 +76,13 @@ class GitHubAPI:
 
         try:
             response = self.session.get(url)
+
+            # Log cache status
+            if hasattr(response, "from_cache") and response.from_cache:
+                print(f"[CACHE] {endpoint}")
+            else:
+                print(f"[API] {endpoint}")
+
             response.raise_for_status()
             return response.json()
         except requests.HTTPError as e:
