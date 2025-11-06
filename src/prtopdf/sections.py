@@ -49,9 +49,24 @@ def create_metadata_section(
     state = "Merged" if pr_data.get("merged_at") else pr_data["state"].capitalize()
     metadata += f"<b>State:</b> {state}<br/>"
 
+    # Show merge information if PR is merged
     if pr_data.get("merged_at"):
+        if not anonymise and pr_data.get("merged_by"):
+            merged_by = pr_data["merged_by"]["login"]
+            metadata += f"<b>Merged by:</b> {merged_by}<br/>"
         merged_at = datetime.strptime(pr_data["merged_at"], "%Y-%m-%dT%H:%M:%SZ")
-        metadata += f"<b>Merged:</b> {merged_at.strftime('%Y-%m-%d')}<br/>"
+        metadata += (
+            f"<b>Merged at:</b> {merged_at.strftime('%Y-%m-%d %H:%M:%S UTC')}<br/>"
+        )
+    # Show close information if PR is closed but not merged
+    elif pr_data["state"] == "closed" and pr_data.get("closed_at"):
+        if not anonymise and pr_data.get("closed_by"):
+            closed_by = pr_data["closed_by"]["login"]
+            metadata += f"<b>Closed by:</b> {closed_by}<br/>"
+        closed_at = datetime.strptime(pr_data["closed_at"], "%Y-%m-%dT%H:%M:%SZ")
+        metadata += (
+            f"<b>Closed at:</b> {closed_at.strftime('%Y-%m-%d %H:%M:%S UTC')}<br/>"
+        )
 
     return [
         Paragraph(metadata, styles["body"]),

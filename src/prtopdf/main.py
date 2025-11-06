@@ -55,6 +55,13 @@ def main() -> None:
         print("Fetching PR details...")
         pr_data = api.get_pull_request(owner, repo, pr_number)
 
+        if pr_data["state"] == "closed" and not pr_data.get("merged_at"):
+            # Fetch issue data to get closed_by
+            issue_data = api.get_issue(owner, repo, pr_number)
+            # Merge closed_by into pr_data
+            if issue_data.get("closed_by"):
+                pr_data["closed_by"] = issue_data["closed_by"]
+
         print("Fetching commits...")
         commits_data = api.get_pull_request_commits(owner, repo, pr_number)
 

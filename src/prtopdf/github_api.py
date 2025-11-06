@@ -15,6 +15,9 @@ class PRData(TypedDict, total=False):
     created_at: str
     state: str
     merged_at: str
+    closed_at: str
+    merged_by: dict[str, Any]
+    closed_by: dict[str, Any]
     body: str
     head: dict[str, Any]
     base: dict[str, Any]
@@ -158,4 +161,19 @@ class GitHubAPI:
             Commit data including files.
         """
         endpoint = f"/repos/{owner}/{repo}/commits/{sha}"
+        return self._request(endpoint)
+
+    def get_issue(self, owner: str, repo: str, issue_number: str) -> dict[str, Any]:
+        """
+        Get issue details (includes closed_by for PRs).
+
+        Args:
+            owner: Repository owner.
+            repo: Repository name.
+            issue_number: Issue/PR number.
+
+        Returns:
+            Issue data.
+        """
+        endpoint = f"/repos/{owner}/{repo}/issues/{issue_number}"
         return self._request(endpoint)
