@@ -4,7 +4,10 @@ Converts a GitHub pull request to an anonymised PDF document.
 Usage: uv run prtopdf <PR_URL>
 """
 
+import os
 import sys
+
+from dotenv import load_dotenv
 
 from prtopdf.generator import create_pdf
 from prtopdf.github_api import GitHubAPI
@@ -37,6 +40,9 @@ def main() -> None:
         print(
             "         uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache"
         )
+        print("\nFor private repositories, set GITHUB_TOKEN environment variable:")
+        print("         export GITHUB_TOKEN=ghp_your_token_here")
+        print("         Or create a .env file with: GITHUB_TOKEN=ghp_your_token_here")
         sys.exit(1)
 
     pr_url = sys.argv[1]
@@ -48,8 +54,12 @@ def main() -> None:
         owner, repo, pr_number = parse_pr_url(pr_url)
         print(f"Processing PR #{pr_number} from {owner}/{repo}")
 
-        # Initialise GitHub API client
-        api = GitHubAPI(use_cache=use_cache)
+        # Get token from environment
+        load_dotenv()
+        token = os.environ.get("GITHUB_TOKEN")
+
+        # Initialise GitHub API client with token
+        api = GitHubAPI(token=token, use_cache=use_cache)
 
         # Fetch data
         print("Fetching PR details...")
