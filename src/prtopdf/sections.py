@@ -46,7 +46,13 @@ def create_metadata_section(
     base_branch = pr_data["base"]["ref"]
     metadata += f"<b>Branch:</b> {head_branch} → {base_branch}<br/>"
 
-    state = "Merged" if pr_data.get("merged_at") else pr_data["state"].capitalize()
+    # Determine state
+    if pr_data.get("draft"):
+        state = "Draft"
+    elif pr_data.get("merged_at"):
+        state = "Merged"
+    else:
+        state = pr_data["state"].capitalize()
     metadata += f"<b>State:</b> {state}<br/>"
 
     # Show merge information if PR is merged
