@@ -40,6 +40,10 @@ def create_metadata_section(
     created_at = datetime.strptime(pr_data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
     metadata += f"<b>Created:</b> {created_at.strftime('%Y-%m-%d')}<br/>"
 
+    head_branch = pr_data["head"]["ref"]
+    base_branch = pr_data["base"]["ref"]
+    metadata += f"<b>Branch:</b> {head_branch} → {base_branch}<br/>"
+
     state = "Merged" if pr_data.get("merged_at") else pr_data["state"].capitalize()
     metadata += f"<b>State:</b> {state}<br/>"
 

@@ -16,6 +16,7 @@ class PRData(TypedDict, total=False):
     state: str
     merged_at: str
     body: str
+    head: dict[str, Any]
     base: dict[str, Any]
     user: dict[str, Any]
 
