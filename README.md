@@ -2,6 +2,18 @@
 
 Convert GitHub pull requests to professional PDF documents for evidence and documentation purposes.
 
+## Example
+
+Transform a GitHub pull request into a clean, formatted PDF document:
+
+### GitHub Pull Request
+![GitHub PR Example](docs/images/github-pr-example.png)
+
+### ⬇️ Converts to ⬇️
+
+### Generated PDF
+![GitHub PR Example](docs/images/pdf-output-example.png)
+
 ## Features
 
 - 📄 Generates clean, well-formatted PDF reports from GitHub PRs
