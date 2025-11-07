@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PR #{{ pr_number }} - {{ title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5em;
+        }
+
+        .repo-name {
+            font-size: 12pt;
+            color: #333;
+            margin-bottom: 0.5em;
+        }
+
+        .pr-title {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+        }
+
+        .metadata {
+            margin-bottom: 1.5em;
+            padding: 1em;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            font-size: 11pt;
+        }
+
+        .metadata p {
+            margin: 0.3em 0;
+        }
+
+        h2 {
+            font-size: 15pt;
+            font-weight: bold;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            border-bottom: 2px solid #000;
+            padding-bottom: 0.3em;
+        }
+
+        h3 {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+        }
+
+        .description {
+            margin-bottom: 1.5em;
+        }
+
+        /* Markdown content styling */
+        .description h1 { font-size: 18pt; font-weight: bold; margin: 1em 0 0.5em 0; }
+        .description h2 { font-size: 16pt; font-weight: bold; margin: 1em 0 0.5em 0; }
+        .description h3 { font-size: 14pt; font-weight: bold; margin: 0.8em 0 0.4em 0; }
+        .description h4 { font-size: 12pt; font-weight: bold; margin: 0.6em 0 0.3em 0; }
+        .description h5 { font-size: 11pt; font-weight: bold; margin: 0.5em 0 0.3em 0; }
+        .description h6 { font-size: 11pt; font-weight: bold; margin: 0.5em 0 0.3em 0; color: #666; }
+
+        .description p {
+            margin: 0.5em 0;
+            font-size: 11pt;
+        }
+
+        .description ul, .description ol {
+            margin: 0.5em 0;
+            padding-left: 2em;
+            font-size: 11pt;
+        }
+
+        .description li {
+            margin: 0.3em 0;
+        }
+
+        .description code {
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 10pt;
+        }
+
+        .description pre {
+            background-color: #f6f8fa;
+            padding: 1em;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1em 0;
+            font-size: 10pt;
+        }
+
+        .description pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .description blockquote {
+            border-left: 4px solid #ddd;
+            margin: 1em 0;
+            padding-left: 1em;
+            color: #666;
+            font-size: 11pt;
+        }
+
+        .description table {
+            border-collapse: collapse;
+            margin: 1em 0;
+            width: 100%;
+            font-size: 11pt;
+        }
+
+        .description table th,
+        .description table td {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            text-align: left;
+        }
+
+        .description table th {
+            background-color: #f6f8fa;
+            font-weight: bold;
+        }
+
+        /* Image constraints - keep images within page margins */
+        .description img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1em 0;
+        }
+
+        .commit {
+            margin-bottom: 1.5em;
+            page-break-inside: avoid;
+        }
+
+        .commit-header {
+            font-weight: bold;
+            margin-bottom: 0.5em;
+            font-size: 12pt;
+        }
+
+        .commit-content {
+            margin-left: 1.5em;
+            color: #555;
+        }
+
+        .commit-meta {
+            font-size: 10pt;
+            margin-bottom: 0.6em;
+        }
+
+        .commit-section-heading {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-top: 0.6em;
+            margin-bottom: 0.3em;
+        }
+
+        .commit-body {
+            font-size: 10pt;
+            margin: 0.3em 0 0.6em 0;
+            padding-left: 1em;
+            border-left: 3px solid #ddd;
+            white-space: pre-wrap;
+        }
+
+        .file-list {
+            margin-top: 0.3em;
+        }
+
+        .file-item {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 10pt;
+            margin: 0.3em 0;
+            padding-left: 1.5em;
+        }
+
+        .added { color: green; }
+        .removed { color: red; }
+
+        .summary-stats {
+            margin-bottom: 1em;
+            padding: 0.8em;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            font-size: 11pt;
+        }
+
+        .summary-stats p {
+            margin: 0.3em 0;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="repo-name">{{ owner }}/{{ repo }}</div>
+        <h1 class="pr-title">Pull Request #{{ pr_number }}: {{ title }}</h1>
+    </div>
+
+    <div class="metadata">
+        {% if metadata.author %}
+        <p><strong>Created by:</strong> {{ metadata.author }}</p>
+        {% endif %}
+        <p><strong>Created at:</strong> {{ metadata.created_at }}</p>
+        <p><strong>Branch:</strong> {{ metadata.head_branch }} → {{ metadata.base_branch }}</p>
+        <p><strong>State:</strong> {{ metadata.state }}</p>
+        {% if metadata.merged_at %}
+            {% if metadata.merged_by %}
+            <p><strong>Merged by:</strong> {{ metadata.merged_by }}</p>
+            {% endif %}
+            <p><strong>Merged at:</strong> {{ metadata.merged_at }}</p>
+        {% elif metadata.closed_at %}
+            {% if metadata.closed_by %}
+            <p><strong>Closed by:</strong> {{ metadata.closed_by }}</p>
+            {% endif %}
+            <p><strong>Closed at:</strong> {{ metadata.closed_at }}</p>
+        {% endif %}
+    </div>
+
+    <h2>1. Pull Request Description</h2>
+    <div class="description">
+        {{ description_html|safe }}
+    </div>
+
+    <h2>2. Commits</h2>
+    {% for commit in commits %}
+    <div class="commit">
+        <div class="commit-header">Commit: {{ commit.title }}</div>
+        <div class="commit-content">
+            <div class="commit-meta">
+                {% if commit.author %}
+                <strong>Author:</strong> {{ commit.author }} |
+                {% endif %}
+                {% if commit.committer %}
+                <strong>Committer:</strong> {{ commit.committer }} |
+                {% endif %}
+                <strong>Date:</strong> {{ commit.date }} | <strong>SHA:</strong> {{ commit.sha }}
+            </div>
+            {% if commit.body %}
+            <div class="commit-section-heading">Description:</div>
+            <div class="commit-body">{{ commit.body }}</div>
+            {% endif %}
+            <div class="commit-section-heading">Files changed:</div>
+            <div class="file-list">
+                {% for file in commit.files %}
+                <div class="file-item">
+                    • {{ file.filename }} ({{ file.status }},
+                    <span class="added">+{{ file.additions }}</span>/<span class="removed">-{{ file.deletions }}</span>)
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <h2>3. Overall Summary of Changes</h2>
+    <div class="summary-stats">
+        <p><strong>Total files changed:</strong> {{ total_files }}</p>
+        <p><strong>Total lines added:</strong> <span class="added">+{{ total_additions }}</span></p>
+        <p><strong>Total lines removed:</strong> <span class="removed">-{{ total_deletions }}</span></p>
+    </div>
+
+    <div class="file-list">
+        <strong>Files changed:</strong>
+        {% for file in files_summary %}
+        <div class="file-item">
+            • {{ file.filename }} ({{ file.status }},
+            <span class="added">+{{ file.additions }}</span>/<span class="removed">-{{ file.deletions }}</span>)
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
