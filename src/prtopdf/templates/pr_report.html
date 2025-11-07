@@ -61,34 +61,39 @@
             margin-bottom: 0.5em;
         }
 
-        .description {
+        .description-container {
             margin-bottom: 1.5em;
+            padding: 1.5em;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
         }
 
         /* Markdown content styling */
-        .description h1 { font-size: 18pt; font-weight: bold; margin: 1em 0 0.5em 0; }
-        .description h2 { font-size: 16pt; font-weight: bold; margin: 1em 0 0.5em 0; }
-        .description h3 { font-size: 14pt; font-weight: bold; margin: 0.8em 0 0.4em 0; }
-        .description h4 { font-size: 12pt; font-weight: bold; margin: 0.6em 0 0.3em 0; }
-        .description h5 { font-size: 11pt; font-weight: bold; margin: 0.5em 0 0.3em 0; }
-        .description h6 { font-size: 11pt; font-weight: bold; margin: 0.5em 0 0.3em 0; color: #666; }
+        .description-container h1 { font-size: 18pt; font-weight: bold; margin: 1em 0 0.5em 0; }
+        .description-container h2 { font-size: 16pt; font-weight: bold; margin: 1em 0 0.5em 0; }
+        .description-container h3 { font-size: 14pt; font-weight: bold; margin: 0.8em 0 0.4em 0; }
+        .description-container h4 { font-size: 12pt; font-weight: bold; margin: 0.6em 0 0.3em 0; }
+        .description-container h5 { font-size: 11pt; font-weight: bold; margin: 0.5em 0 0.3em 0; }
+        .description-container h6 { font-size: 11pt; font-weight: bold; margin: 0.5em 0 0.3em 0; color: #666; }
 
-        .description p {
+        .description-container p {
             margin: 0.5em 0;
             font-size: 11pt;
         }
 
-        .description ul, .description ol {
+        .description-container ul, .description-container ol {
             margin: 0.5em 0;
             padding-left: 2em;
             font-size: 11pt;
         }
 
-        .description li {
+        .description-container li {
             margin: 0.3em 0;
         }
 
-        .description code {
+        .description-container code {
             background-color: #f6f8fa;
             padding: 0.2em 0.4em;
             border-radius: 3px;
@@ -96,7 +101,7 @@
             font-size: 10pt;
         }
 
-        .description pre {
+        .description-container pre {
             background-color: #f6f8fa;
             padding: 1em;
             border-radius: 6px;
@@ -105,12 +110,12 @@
             font-size: 10pt;
         }
 
-        .description pre code {
+        .description-container pre code {
             background-color: transparent;
             padding: 0;
         }
 
-        .description blockquote {
+        .description-container blockquote {
             border-left: 4px solid #ddd;
             margin: 1em 0;
             padding-left: 1em;
@@ -118,30 +123,37 @@
             font-size: 11pt;
         }
 
-        .description table {
+        .description-container table {
             border-collapse: collapse;
             margin: 1em 0;
             width: 100%;
             font-size: 11pt;
         }
 
-        .description table th,
-        .description table td {
+        .description-container table th,
+        .description-container table td {
             border: 1px solid #ddd;
             padding: 0.5em;
             text-align: left;
         }
 
-        .description table th {
+        .description-container table th {
             background-color: #f6f8fa;
             font-weight: bold;
         }
 
         /* Image constraints - keep images within page margins */
-        .description img {
+        .description-container img {
             max-width: 100%;
             height: auto;
             display: block;
+            margin: 1em 0;
+        }
+
+        /* Horizontal rules inside description should look different from section headers */
+        .description-container hr {
+            border: none;
+            border-top: 1px solid #d0d7de;
             margin: 1em 0;
         }
 
@@ -239,7 +251,7 @@
     </div>
 
     <h2>1. Pull Request Description</h2>
-    <div class="description">
+    <div class="description-container">
         {{ description_html|safe }}
     </div>
 
