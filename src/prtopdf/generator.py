@@ -1,12 +1,22 @@
 """PDF generation using Playwright (headless Chrome)."""
 
+import re
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from playwright.sync_api import sync_playwright
 
+from prtopdf.config import DEFAULT_REDACTIONS, AnonymisationConfig
 from prtopdf.formatters import format_datetime, format_file_info, format_markdown
 from prtopdf.github_api import CommitData, FileData, GitHubAPI, PRData
+
+
+def strip_markdown_links(text: str) -> str:
+    """Remove markdown hyperlinks but keep the link text.
+
+    Example: [Google](https://google.com) -> Google
+    """
+    return re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
 
 
 def prepare_template_data(
@@ -14,9 +24,11 @@ def prepare_template_data(
     commits_data: list[CommitData],
     files_data: list[FileData],
     api: GitHubAPI,
-    anonymise: bool = False,
+    config: AnonymisationConfig | None = None,
 ) -> dict:
     """Prepare all data for template rendering."""
+    redact = config["redactions"] if config else DEFAULT_REDACTIONS
+
     owner = pr_data["base"]["repo"]["owner"]["login"]
     repo = pr_data["base"]["repo"]["name"]
 
@@ -29,29 +41,37 @@ def prepare_template_data(
         state = pr_data["state"].capitalize()
 
     # Prepare metadata
-    metadata = {
-        "author": pr_data["user"]["login"] if not anonymise else None,
-        "created_at": format_datetime(pr_data["created_at"]),
-        "head_branch": pr_data["head"]["ref"],
-        "base_branch": pr_data["base"]["ref"],
-        "state": state,
-    }
+    metadata = {}
+
+    if not redact.get("metadata_author"):
+        metadata["author"] = pr_data["user"]["login"]
+
+    if not redact.get("metadata_created_at"):
+        metadata["created_at"] = format_datetime(pr_data["created_at"])
+
+    if not redact.get("metadata_branches"):
+        metadata["head_branch"] = pr_data["head"]["ref"]
+        metadata["base_branch"] = pr_data["base"]["ref"]
+
+    metadata["state"] = state
 
     # Add merge/close information
     if pr_data.get("merged_at"):
-        metadata["merged_by"] = (
-            pr_data["merged_by"]["login"]
-            if not anonymise and pr_data.get("merged_by")
-            else None
-        )
-        metadata["merged_at"] = format_datetime(pr_data["merged_at"])
+        if not redact.get("metadata_closed_merged_by") and pr_data.get("merged_by"):
+            metadata["merged_by"] = pr_data["merged_by"]["login"]
+        if not redact.get("metadata_closed_merged_at"):
+            metadata["merged_at"] = format_datetime(pr_data["merged_at"])
     elif pr_data["state"] == "closed" and pr_data.get("closed_at"):
-        metadata["closed_by"] = (
-            pr_data["closed_by"]["login"]
-            if not anonymise and pr_data.get("closed_by")
-            else None
-        )
-        metadata["closed_at"] = format_datetime(pr_data["closed_at"])
+        if not redact.get("metadata_closed_merged_by") and pr_data.get("closed_by"):
+            metadata["closed_by"] = pr_data["closed_by"]["login"]
+        if not redact.get("metadata_closed_merged_at"):
+            metadata["closed_at"] = format_datetime(pr_data["closed_at"])
+
+    # Prepare PR description
+    description = pr_data.get("body", "")
+    if redact.get("pr_description_links"):
+        description = strip_markdown_links(description)
+    description_html = format_markdown(description)
 
     # Prepare commits
     commits = []
@@ -90,39 +110,52 @@ def prepare_template_data(
         commit_details = api.get_commit(owner, repo, commit_sha)
         files = [format_file_info(file) for file in commit_details.get("files", [])]
 
-        commits.append(
-            {
-                "title": commit_title,
-                "body": commit_body,
-                "sha": short_sha,
-                "author": author_username if not anonymise else None,
-                "committer": (
-                    committer_username if (not anonymise and show_committer) else None
-                ),
-                "date": commit_date,
-                "files": files,
-            }
-        )
+        commit_data = {
+            "title": commit_title,
+            "body": commit_body,
+            "files": files,
+        }
+
+        # Add optional fields based on redaction config
+        if not redact.get("commit_author"):
+            commit_data["author"] = author_username
+
+        if not redact.get("commit_committer") and show_committer:
+            commit_data["committer"] = committer_username
+
+        if not redact.get("commit_date"):
+            commit_data["date"] = commit_date
+
+        if not redact.get("commit_sha"):
+            commit_data["sha"] = short_sha
+
+        commits.append(commit_data)
 
     # Prepare file summary
     files_summary = [format_file_info(file) for file in files_data]
     total_additions = sum(f.get("additions", 0) for f in files_data)
     total_deletions = sum(f.get("deletions", 0) for f in files_data)
 
-    return {
-        "owner": owner,
-        "repo": repo,
-        "pr_number": pr_data["number"],
+    template_data = {
         "title": pr_data["title"],
-        "description_html": format_markdown(pr_data.get("body", "")),
+        "description_html": description_html,
         "metadata": metadata,
         "commits": commits,
         "files_summary": files_summary,
         "total_files": len(files_data),
         "total_additions": total_additions,
         "total_deletions": total_deletions,
-        "anonymise": anonymise,
     }
+
+    # Add optional fields based on redaction config
+    if not redact.get("repo_info"):
+        template_data["owner"] = owner
+        template_data["repo"] = repo
+
+    if not redact.get("pr_number"):
+        template_data["pr_number"] = pr_data["number"]
+
+    return template_data
 
 
 def create_pdf(
@@ -131,7 +164,7 @@ def create_pdf(
     files_data: list[FileData],
     output_filename: str,
     api: GitHubAPI,
-    anonymise: bool = False,
+    config: AnonymisationConfig | None = None,
 ) -> None:
     """Generate PDF document from PR data using Jinja2 template and Playwright."""
     # Set up Jinja2 environment
@@ -142,7 +175,7 @@ def create_pdf(
     )
 
     # Prepare data
-    data = prepare_template_data(pr_data, commits_data, files_data, api, anonymise)
+    data = prepare_template_data(pr_data, commits_data, files_data, api, config)
 
     # Render template
     template = env.get_template("pr_report.html")

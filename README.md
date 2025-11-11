@@ -19,7 +19,7 @@ Transform a GitHub pull request into a clean, formatted PDF document:
 - 📄 Generates clean, well-formatted PDF reports from GitHub PRs
 - 🎨 Full markdown support (headings, lists, code blocks, tables, images, emojis)
 - 📝 Includes PR metadata, description, commits, and file changes
-- 🔒 Optional anonymisation mode (removes usernames)
+- 🔒 Flexible anonymisation with custom configs (redact usernames, timestamps, links, etc.)
 - ⚡ Fast caching of GitHub API requests
 - 🎯 Works with both public and private repositories
 
@@ -96,10 +96,21 @@ uv run prtopdf https://github.com/owner/repo/pull/123
 
 This generates a file named `PR-123-evidence.pdf` in the current directory.
 
-### Anonymise output (remove usernames)
+### Anonymisation
+
+**Quick anonymisation (default config - removes usernames only):**
+```bash
+uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default
+```
+
+**Custom anonymisation (interactive menu):**
 ```bash
 uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise
 ```
+
+This opens an interactive menu where you can:
+- Select from existing anonymisation configs
+- Create a new custom config (choose which elements to redact: repo name, PR number, usernames, timestamps, branch info, links, commit metadata, etc.)
 
 ### Disable caching (always fetch fresh data)
 ```bash
@@ -108,7 +119,7 @@ uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache
 
 ### Combine flags
 ```bash
-uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise --no-cache
+uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default --no-cache
 ```
 
 ## Development
@@ -148,9 +159,12 @@ prtopdf/
 ├── src/prtopdf/
 │   ├── __init__.py
 │   ├── main.py              # CLI entry point
+│   ├── config.py            # Anonymisation config management
 │   ├── generator.py         # PDF generation with Playwright
 │   ├── formatters.py        # Text/markdown formatting
 │   ├── github_api.py        # GitHub API client
+│   ├── configs/
+│   │   └── default.json     # Default anonymisation config
 │   └── templates/
 │       └── pr_report.html   # Jinja2 template for PDF
 ├── pyproject.toml           # Project configuration

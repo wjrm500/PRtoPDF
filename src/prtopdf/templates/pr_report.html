@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>PR #{{ pr_number }} - {{ title }}</title>
+    <title>{% if pr_number %}PR #{{ pr_number }}{% else %}Pull Request{% endif %} - {{ title }}</title>
     <style>
         @page {
             size: A4;
@@ -43,6 +43,14 @@
 
         .metadata p {
             margin: 0.3em 0;
+        }
+
+        .metadata p:first-child {
+            margin-top: 0;
+        }
+
+        .metadata p:last-child {
+            margin-bottom: 0;
         }
 
         h2 {
@@ -178,6 +186,10 @@
             margin-bottom: 0.6em;
         }
 
+        .commit-meta:empty {
+            display: none;
+        }
+
         .commit-section-heading {
             font-size: 10pt;
             font-weight: bold;
@@ -226,16 +238,22 @@
 </head>
 <body>
     <div class="header">
+        {% if owner and repo %}
         <div class="repo-name">{{ owner }}/{{ repo }}</div>
-        <h1 class="pr-title">Pull Request #{{ pr_number }}: {{ title }}</h1>
+        {% endif %}
+        <h1 class="pr-title">{% if pr_number %}Pull Request #{{ pr_number }}: {% endif %}{{ title }}</h1>
     </div>
 
     <div class="metadata">
         {% if metadata.author %}
         <p><strong>Created by:</strong> {{ metadata.author }}</p>
         {% endif %}
+        {% if metadata.created_at %}
         <p><strong>Created at:</strong> {{ metadata.created_at }}</p>
+        {% endif %}
+        {% if metadata.head_branch and metadata.base_branch %}
         <p><strong>Branch:</strong> {{ metadata.head_branch }} → {{ metadata.base_branch }}</p>
+        {% endif %}
         <p><strong>State:</strong> {{ metadata.state }}</p>
         {% if metadata.merged_at %}
             {% if metadata.merged_by %}
@@ -260,15 +278,26 @@
     <div class="commit">
         <div class="commit-header">Commit: {{ commit.title }}</div>
         <div class="commit-content">
+            {% set has_meta = commit.author or commit.committer or commit.date or commit.sha %}
+            {% if has_meta %}
             <div class="commit-meta">
                 {% if commit.author %}
-                <strong>Author:</strong> {{ commit.author }} |
+                <strong>Author:</strong> {{ commit.author }}
+                {% if commit.committer or commit.date or commit.sha %} | {% endif %}
                 {% endif %}
                 {% if commit.committer %}
-                <strong>Committer:</strong> {{ commit.committer }} |
+                <strong>Committer:</strong> {{ commit.committer }}
+                {% if commit.date or commit.sha %} | {% endif %}
                 {% endif %}
-                <strong>Date:</strong> {{ commit.date }} | <strong>SHA:</strong> {{ commit.sha }}
+                {% if commit.date %}
+                <strong>Date:</strong> {{ commit.date }}
+                {% if commit.sha %} | {% endif %}
+                {% endif %}
+                {% if commit.sha %}
+                <strong>SHA:</strong> {{ commit.sha }}
+                {% endif %}
             </div>
+            {% endif %}
             {% if commit.body %}
             <div class="commit-section-heading">Description:</div>
             <div class="commit-body">{{ commit.body }}</div>

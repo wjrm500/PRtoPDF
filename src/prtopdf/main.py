@@ -9,6 +9,7 @@ import sys
 
 from dotenv import load_dotenv
 
+from prtopdf.config import load_config, select_config_interactive
 from prtopdf.generator import create_pdf
 from prtopdf.github_api import GitHubAPI
 
@@ -32,22 +33,42 @@ def parse_pr_url(url: str) -> tuple[str, str, str]:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: uv run prtopdf <PR_URL> [--anonymise] [--no-cache]")
-        print("Example: uv run prtopdf https://github.com/owner/repo/pull/123")
         print(
-            "         uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise"
+            "Usage: uv run prtopdf <PR_URL> [--anonymise | --anonymise-default] [--no-cache]"
         )
+        print("\nExamples:")
+        print("  uv run prtopdf https://github.com/owner/repo/pull/123")
+        print("  uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise")
         print(
-            "         uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache"
+            "  uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default"
         )
+        print("  uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache")
+        print("\nFlags:")
+        print("  --anonymise          Interactive config selection/creation")
+        print("  --anonymise-default  Use default.json config (quick)")
+        print("  --no-cache           Disable API response caching")
         print("\nFor private repositories, set GITHUB_TOKEN environment variable:")
-        print("         export GITHUB_TOKEN=ghp_your_token_here")
-        print("         Or create a .env file with: GITHUB_TOKEN=ghp_your_token_here")
+        print("  export GITHUB_TOKEN=ghp_your_token_here")
+        print("  Or create a .env file with: GITHUB_TOKEN=ghp_your_token_here")
         sys.exit(1)
 
     pr_url = sys.argv[1]
-    anonymise = "--anonymise" in sys.argv
+    use_anonymise = "--anonymise" in sys.argv
+    use_anonymise_default = "--anonymise-default" in sys.argv
     use_cache = "--no-cache" not in sys.argv
+
+    # Determine config
+    config = None
+    if use_anonymise and use_anonymise_default:
+        print("Error: Cannot use both --anonymise and --anonymise-default")
+        sys.exit(1)
+    elif use_anonymise:
+        config_filename = select_config_interactive()
+        config = load_config(config_filename)
+        print(f"\nUsing config: {config_filename}")
+    elif use_anonymise_default:
+        config = load_config("default.json")
+        print("Using default anonymisation config")
 
     try:
         # Parse URL
@@ -80,7 +101,7 @@ def main() -> None:
 
         # Generate PDF
         output_filename = f"PR-{pr_number}-evidence.pdf"
-        create_pdf(pr_data, commits_data, files_data, output_filename, api, anonymise)
+        create_pdf(pr_data, commits_data, files_data, output_filename, api, config)
 
     except ValueError as e:
         print(f"Error: {e}")

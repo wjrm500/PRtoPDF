@@ -13,3 +13,6 @@ wheels/
 .cache/
 todos.txt
 .env
+
+src/prtopdf/configs/*
+!src/prtopdf/configs/default.json

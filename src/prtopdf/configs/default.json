@@ -1,0 +1,17 @@
+{
+  "description": "Default anonymisation - redacts usernames only",
+  "redactions": {
+    "repo_info": false,
+    "pr_number": false,
+    "metadata_author": true,
+    "metadata_created_at": false,
+    "metadata_branches": false,
+    "metadata_closed_merged_by": true,
+    "metadata_closed_merged_at": false,
+    "pr_description_links": false,
+    "commit_author": true,
+    "commit_committer": true,
+    "commit_date": false,
+    "commit_sha": false
+  }
+}
