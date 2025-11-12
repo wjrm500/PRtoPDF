@@ -4,6 +4,7 @@ Converts a GitHub pull request to an anonymised PDF document.
 Usage: uv run prtopdf <PR_URL>
 """
 
+import argparse
 import os
 import sys
 
@@ -32,47 +33,55 @@ def parse_pr_url(url: str) -> tuple[str, str, str]:
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print(
-            "Usage: uv run prtopdf <PR_URL> [--anonymise | --anonymise-default] [--no-cache]"
-        )
-        print("\nExamples:")
-        print("  uv run prtopdf https://github.com/owner/repo/pull/123")
-        print("  uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise")
-        print(
-            "  uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default"
-        )
-        print("  uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache")
-        print("\nFlags:")
-        print("  --anonymise          Interactive config selection/creation")
-        print("  --anonymise-default  Use default.json config (quick)")
-        print("  --no-cache           Disable API response caching")
-        print("\nFor private repositories, set GITHUB_TOKEN environment variable:")
-        print("  export GITHUB_TOKEN=ghp_your_token_here")
-        print("  Or create a .env file with: GITHUB_TOKEN=ghp_your_token_here")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Convert GitHub pull requests to professional PDF documents",
+        epilog="""
+Examples:
+  uv run prtopdf https://github.com/owner/repo/pull/123
+  uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise
+  uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default
+  uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache
 
-    pr_url = sys.argv[1]
-    use_anonymise = "--anonymise" in sys.argv
-    use_anonymise_default = "--anonymise-default" in sys.argv
-    use_cache = "--no-cache" not in sys.argv
+For private repositories, set GITHUB_TOKEN environment variable:
+  export GITHUB_TOKEN=ghp_your_token_here
+  Or create a .env file with: GITHUB_TOKEN=ghp_your_token_here
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument("pr_url", help="GitHub pull request URL")
+
+    anonymise_group = parser.add_mutually_exclusive_group()
+    anonymise_group.add_argument(
+        "--anonymise",
+        action="store_true",
+        help="Interactive config selection/creation",
+    )
+    anonymise_group.add_argument(
+        "--anonymise-default",
+        action="store_true",
+        help="Use default.json config (quick)",
+    )
+
+    parser.add_argument(
+        "--no-cache", action="store_true", help="Disable API response caching"
+    )
+
+    args = parser.parse_args()
 
     # Determine config
     config = None
-    if use_anonymise and use_anonymise_default:
-        print("Error: Cannot use both --anonymise and --anonymise-default")
-        sys.exit(1)
-    elif use_anonymise:
+    if args.anonymise:
         config_filename = select_config_interactive()
         config = load_config(config_filename)
         print(f"\nUsing config: {config_filename}")
-    elif use_anonymise_default:
+    elif args.anonymise_default:
         config = load_config("default.json")
         print("Using default anonymisation config")
 
     try:
         # Parse URL
-        owner, repo, pr_number = parse_pr_url(pr_url)
+        owner, repo, pr_number = parse_pr_url(args.pr_url)
         print(f"Processing PR #{pr_number} from {owner}/{repo}")
 
         # Get token from environment
@@ -80,6 +89,7 @@ def main() -> None:
         token = os.environ.get("GITHUB_TOKEN")
 
         # Initialise GitHub API client with token
+        use_cache = not args.no_cache
         api = GitHubAPI(token=token, use_cache=use_cache)
 
         # Fetch data
