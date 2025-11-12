@@ -20,7 +20,7 @@ Transform a GitHub pull request into a clean, formatted PDF document:
 - 🎨 Full markdown support (headings, lists, code blocks, tables, images, emojis)
 - 📝 Includes PR metadata, description, commits, and file changes
 - 🔒 Flexible anonymisation with custom configs (redact usernames, timestamps, links, etc.)
-- ⚡ Fast caching of GitHub API requests
+- ⚡ Optional caching of GitHub API requests
 - 🎯 Works with both public and private repositories
 
 ## Requirements
@@ -141,17 +141,6 @@ uv run mypy .
 # Lint
 uv run flake8
 ```
-
-### Adding dependencies
-```bash
-# Add a runtime dependency
-uv add package-name
-
-# Add a dev dependency
-uv add --dev package-name
-```
-
-After adding dependencies, run `uv sync` to update the lockfile and virtual environment.
 
 ### Project structure
 ```
