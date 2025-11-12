@@ -19,6 +19,7 @@ Transform a GitHub pull request into a clean, formatted PDF document:
 - 📄 Generates clean, well-formatted PDF reports from GitHub PRs
 - 🎨 Full markdown support (headings, lists, code blocks, tables, images, emojis)
 - 📝 Includes PR metadata, description, commits, and file changes
+- 💻 Optional code diff visualisation with GitHub-style formatting
 - 🔒 Flexible anonymisation with custom configs (redact usernames, timestamps, links, etc.)
 - ⚡ Optional caching of GitHub API requests
 - 🎯 Works with both public and private repositories
@@ -96,6 +97,25 @@ uv run prtopdf https://github.com/owner/repo/pull/123
 
 This generates a file named `PR-123-evidence.pdf` in the current directory.
 
+### Code diffs
+
+**Show diffs for each commit:**
+```bash
+uv run prtopdf https://github.com/owner/repo/pull/123 --diffs-by-commit
+```
+
+**Show diffs in overall summary:**
+```bash
+uv run prtopdf https://github.com/owner/repo/pull/123 --diffs-overall
+```
+
+**Show diffs in both places:**
+```bash
+uv run prtopdf https://github.com/owner/repo/pull/123 --diffs-by-commit --diffs-overall
+```
+
+Diffs are displayed with GitHub-style formatting: line numbers, +/- indicators, and colour-coded additions/deletions.
+
 ### Anonymisation
 
 **Quick anonymisation (default config - removes usernames only):**
@@ -119,7 +139,7 @@ uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache
 
 ### Combine flags
 ```bash
-uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default --no-cache
+uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default --diffs-overall --no-cache
 ```
 
 ## Development

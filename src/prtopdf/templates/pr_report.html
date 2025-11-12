@@ -234,6 +234,98 @@
         strong {
             font-weight: bold;
         }
+
+        /* Diff styling */
+        .diff-container {
+            margin: 1em 0;
+            page-break-inside: avoid;
+        }
+
+        .diff-file-header {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 10pt;
+            font-weight: bold;
+            background-color: #f6f8fa;
+            padding: 0.5em;
+            border: 1px solid #d0d7de;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .diff-hunk {
+            margin-bottom: 0.5em;
+        }
+
+        .diff-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 8pt;
+            border: 1px solid #d0d7de;
+            background-color: #ffffff;
+        }
+
+        .diff-table:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .diff-line-num {
+            width: 1%;
+            min-width: 40px;
+            padding: 0 0.5em;
+            text-align: right;
+            color: rgba(27, 31, 36, 0.3);
+            background-color: #f6f8fa;
+            border-right: 1px solid #d0d7de;
+            user-select: none;
+            vertical-align: top;
+            white-space: nowrap;
+        }
+
+        .diff-line-content {
+            padding: 0 0.5em;
+            white-space: pre-wrap;
+            word-break: break-all;
+            vertical-align: top;
+        }
+
+        .diff-line-addition {
+            background-color: #e6ffec;
+        }
+
+        .diff-line-addition .diff-line-num {
+            background-color: #ccffd8;
+        }
+
+        .diff-line-addition .diff-line-content::before {
+            content: '+';
+            color: #1a7f37;
+            margin-right: 0.5em;
+        }
+
+        .diff-line-deletion {
+            background-color: #ffebe9;
+        }
+
+        .diff-line-deletion .diff-line-num {
+            background-color: #ffd7d5;
+        }
+
+        .diff-line-deletion .diff-line-content::before {
+            content: '-';
+            color: #d1242f;
+            margin-right: 0.5em;
+        }
+
+        .diff-line-context .diff-line-content::before {
+            content: ' ';
+            margin-right: 0.5em;
+        }
+
+        /* Empty diff line nums */
+        .diff-line-num-empty {
+            color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -311,6 +403,32 @@
                 </div>
                 {% endfor %}
             </div>
+
+            {% if commit.diffs %}
+            <div class="commit-section-heading">Code changes:</div>
+            {% for diff in commit.diffs %}
+            <div class="diff-container">
+                <div class="diff-file-header">{{ diff.filename }}</div>
+                {% for hunk in diff.hunks %}
+                <div class="diff-hunk">
+                    <table class="diff-table">
+                        {% for line in hunk.lines %}
+                        <tr class="diff-line-{{ line.type }}">
+                            <td class="diff-line-num {% if line.old_line_num is none %}diff-line-num-empty{% endif %}">
+                                {% if line.old_line_num is not none %}{{ line.old_line_num }}{% endif %}
+                            </td>
+                            <td class="diff-line-num {% if line.new_line_num is none %}diff-line-num-empty{% endif %}">
+                                {% if line.new_line_num is not none %}{{ line.new_line_num }}{% endif %}
+                            </td>
+                            <td class="diff-line-content">{{ line.content }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            {% endif %}
         </div>
     </div>
     {% endfor %}
@@ -331,5 +449,33 @@
         </div>
         {% endfor %}
     </div>
+
+    {% if show_diffs_in_summary and overall_diffs %}
+    <div style="margin-top: 1em;">
+        <strong>Code changes:</strong>
+    </div>
+    {% for diff in overall_diffs %}
+    <div class="diff-container">
+        <div class="diff-file-header">{{ diff.filename }}</div>
+        {% for hunk in diff.hunks %}
+        <div class="diff-hunk">
+            <table class="diff-table">
+                {% for line in hunk.lines %}
+                <tr class="diff-line-{{ line.type }}">
+                    <td class="diff-line-num {% if line.old_line_num is none %}diff-line-num-empty{% endif %}">
+                        {% if line.old_line_num is not none %}{{ line.old_line_num }}{% endif %}
+                    </td>
+                    <td class="diff-line-num {% if line.new_line_num is none %}diff-line-num-empty{% endif %}">
+                        {% if line.new_line_num is not none %}{{ line.new_line_num }}{% endif %}
+                    </td>
+                    <td class="diff-line-content">{{ line.content }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    {% endif %}
 </body>
 </html>

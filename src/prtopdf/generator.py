@@ -7,7 +7,13 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from playwright.sync_api import sync_playwright
 
 from prtopdf.config import DEFAULT_REDACTIONS, AnonymisationConfig
-from prtopdf.formatters import format_datetime, format_file_info, format_markdown
+from prtopdf.formatters import (
+    format_datetime,
+    format_diff_for_template,
+    format_file_info,
+    format_markdown,
+    parse_diff,
+)
 from prtopdf.github_api import CommitData, FileData, GitHubAPI, PRData
 
 
@@ -25,8 +31,20 @@ def prepare_template_data(
     files_data: list[FileData],
     api: GitHubAPI,
     config: AnonymisationConfig | None = None,
+    show_commit_diffs: bool = False,
+    show_overall_diffs: bool = False,
 ) -> dict:
-    """Prepare all data for template rendering."""
+    """Prepare all data for template rendering.
+
+    Args:
+        pr_data: Pull request data
+        commits_data: List of commits
+        files_data: List of files changed
+        api: GitHub API client
+        config: Anonymisation configuration
+        show_commit_diffs: Whether to include diffs in each commit
+        show_overall_diffs: Whether to include diffs in overall summary
+    """
     redact = config["redactions"] if config else DEFAULT_REDACTIONS
 
     owner = pr_data["base"]["repo"]["owner"]["login"]
@@ -116,6 +134,17 @@ def prepare_template_data(
             "files": files,
         }
 
+        # Add diffs if requested for commits
+        if show_commit_diffs:
+            diffs = []
+            for file in commit_details.get("files", []):
+                if file.get("patch"):
+                    parsed = parse_diff(file["patch"], file["filename"])
+                    if parsed.hunks:
+                        diffs.append(format_diff_for_template(parsed))
+            if diffs:
+                commit_data["diffs"] = diffs
+
         # Add optional fields based on redaction config
         if not redact.get("commit_author"):
             commit_data["author"] = author_username
@@ -145,7 +174,19 @@ def prepare_template_data(
         "total_files": len(files_data),
         "total_additions": total_additions,
         "total_deletions": total_deletions,
+        "show_diffs_in_summary": show_overall_diffs,
     }
+
+    # Add overall diffs if requested
+    if show_overall_diffs:
+        overall_diffs = []
+        for file in files_data:
+            if file.get("patch"):
+                parsed = parse_diff(file["patch"], file["filename"])
+                if parsed.hunks:
+                    overall_diffs.append(format_diff_for_template(parsed))
+        if overall_diffs:
+            template_data["overall_diffs"] = overall_diffs
 
     # Add optional fields based on redaction config
     if not redact.get("repo_info"):
@@ -165,8 +206,21 @@ def create_pdf(
     output_filename: str,
     api: GitHubAPI,
     config: AnonymisationConfig | None = None,
+    show_commit_diffs: bool = False,
+    show_overall_diffs: bool = False,
 ) -> None:
-    """Generate PDF document from PR data using Jinja2 template and Playwright."""
+    """Generate PDF document from PR data using Jinja2 template and Playwright.
+
+    Args:
+        pr_data: Pull request data
+        commits_data: List of commits
+        files_data: List of files changed
+        output_filename: Output PDF filename
+        api: GitHub API client
+        config: Anonymisation configuration
+        show_commit_diffs: Whether to include diffs in each commit
+        show_overall_diffs: Whether to include diffs in overall summary
+    """
     # Set up Jinja2 environment
     templates_dir = Path(__file__).parent / "templates"
     env = Environment(
@@ -175,7 +229,15 @@ def create_pdf(
     )
 
     # Prepare data
-    data = prepare_template_data(pr_data, commits_data, files_data, api, config)
+    data = prepare_template_data(
+        pr_data,
+        commits_data,
+        files_data,
+        api,
+        config,
+        show_commit_diffs,
+        show_overall_diffs,
+    )
 
     # Render template
     template = env.get_template("pr_report.html")

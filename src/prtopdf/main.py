@@ -41,6 +41,9 @@ Examples:
   uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise
   uv run prtopdf https://github.com/owner/repo/pull/123 --anonymise-default
   uv run prtopdf https://github.com/owner/repo/pull/123 --no-cache
+  uv run prtopdf https://github.com/owner/repo/pull/123 --diffs-by-commit
+  uv run prtopdf https://github.com/owner/repo/pull/123 --diffs-overall
+  uv run prtopdf https://github.com/owner/repo/pull/123 --diffs-by-commit --diffs-overall
 
 For private repositories, set GITHUB_TOKEN environment variable:
   export GITHUB_TOKEN=ghp_your_token_here
@@ -64,6 +67,17 @@ For private repositories, set GITHUB_TOKEN environment variable:
     )
 
     parser.add_argument(
+        "--diffs-by-commit",
+        action="store_true",
+        help="Show code diffs for each commit",
+    )
+    parser.add_argument(
+        "--diffs-overall",
+        action="store_true",
+        help="Show code diffs in overall summary",
+    )
+
+    parser.add_argument(
         "--no-cache", action="store_true", help="Disable API response caching"
     )
 
@@ -78,6 +92,17 @@ For private repositories, set GITHUB_TOKEN environment variable:
     elif args.anonymise_default:
         config = load_config("default.json")
         print("Using default anonymisation config")
+
+    # Determine diff options
+    show_commit_diffs = args.diffs_by_commit
+    show_overall_diffs = args.diffs_overall
+
+    if show_commit_diffs and show_overall_diffs:
+        print("Including diffs for each commit and in overall summary")
+    elif show_commit_diffs:
+        print("Including diffs for each commit")
+    elif show_overall_diffs:
+        print("Including diffs in overall summary")
 
     try:
         # Parse URL
@@ -111,7 +136,16 @@ For private repositories, set GITHUB_TOKEN environment variable:
 
         # Generate PDF
         output_filename = f"PR-{pr_number}-evidence.pdf"
-        create_pdf(pr_data, commits_data, files_data, output_filename, api, config)
+        create_pdf(
+            pr_data,
+            commits_data,
+            files_data,
+            output_filename,
+            api,
+            config,
+            show_commit_diffs,
+            show_overall_diffs,
+        )
 
     except ValueError as e:
         print(f"Error: {e}")

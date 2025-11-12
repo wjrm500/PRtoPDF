@@ -37,6 +37,7 @@ class FileData(TypedDict, total=False):
     status: str
     additions: int
     deletions: int
+    patch: str
 
 
 class GitHubAPI:
